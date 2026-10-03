@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSite } from '../context/SiteContext';
 import { useAdmin } from '../context/AdminContext';
 import { ArrowLeft, Disc, Play, Radio, Calendar, Music, Edit3, Copy, Check, Guitar } from 'lucide-react';
+import { formatImageUrl } from '../utils/imageUtils';
 
 type ReleaseDetailProps = {
   slug: string;
@@ -59,7 +60,7 @@ export const ReleaseDetailPage: React.FC<ReleaseDetailProps> = ({ slug, navigate
             <div className="md:col-span-5 relative group">
               <div className="aspect-square bg-surface-subtle border-4 border-text shadow-punk overflow-hidden">
                 <img
-                  src={release.coverUrl}
+                  src={formatImageUrl(release.coverUrl)}
                   alt={release.coverAlt || release.title}
                   className="w-full h-full object-cover"
                 />

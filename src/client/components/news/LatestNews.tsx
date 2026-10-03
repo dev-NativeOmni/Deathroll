@@ -2,6 +2,7 @@ import React from 'react';
 import { useSite } from '../../context/SiteContext';
 import { useAdmin } from '../../context/AdminContext';
 import { Calendar, ArrowRight, Edit3, Newspaper } from 'lucide-react';
+import { formatImageUrl } from '../../utils/imageUtils';
 
 type NewsProps = {
   navigate: (path: string) => void;
@@ -83,7 +84,7 @@ export const LatestNews: React.FC<NewsProps> = ({ navigate, limit }) => {
                     className="relative aspect-video overflow-hidden bg-surface-subtle cursor-pointer border-b border-border"
                   >
                     <img
-                      src={post.imageUrl}
+                      src={formatImageUrl(post.imageUrl)}
                       alt={post.imageAlt || post.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"

@@ -3,6 +3,7 @@ import { useSite } from '../context/SiteContext';
 import { useAdmin } from '../context/AdminContext';
 import { Disc, Play, Radio, ArrowRight, Edit3, Search } from 'lucide-react';
 import { Release } from '../../shared/types';
+import { formatImageUrl } from '../utils/imageUtils';
 
 type DiscographyPageProps = {
   navigate: (path: string) => void;
@@ -106,7 +107,7 @@ export const DiscographyPage: React.FC<DiscographyPageProps> = ({ navigate }) =>
                   className="relative aspect-square overflow-hidden bg-surface-subtle border border-border cursor-pointer mb-4"
                 >
                   <img
-                    src={release.coverUrl}
+                    src={formatImageUrl(release.coverUrl)}
                     alt={release.coverAlt || release.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"

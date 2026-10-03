@@ -3,6 +3,7 @@ import { useSite } from '../../context/SiteContext';
 import { useAdmin } from '../../context/AdminContext';
 import { Play, Film, X, ExternalLink, Edit3, Youtube } from 'lucide-react';
 import { VideoClip } from '../../../shared/types';
+import { formatImageUrl } from '../../utils/imageUtils';
 
 export const VideoGallery: React.FC = () => {
   const { content, openDrawer } = useSite();
@@ -65,7 +66,7 @@ export const VideoGallery: React.FC = () => {
                   className="relative aspect-video overflow-hidden bg-surface-subtle cursor-pointer border-b border-border"
                 >
                   <img
-                    src={vid.thumbnailUrl}
+                    src={formatImageUrl(vid.thumbnailUrl)}
                     alt={vid.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 filter brightness-90 group-hover:brightness-100"
                     loading="lazy"

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSite } from '../../context/SiteContext';
 import { useAdmin } from '../../context/AdminContext';
+import { formatImageUrl } from '../../utils/imageUtils';
 import { ChevronLeft, ChevronRight, Edit3, Calendar, ArrowRight, Play } from 'lucide-react';
 
 type HeroProps = {
@@ -80,7 +81,7 @@ export const HeroCarousel: React.FC<HeroProps> = ({ navigate }) => {
           }`}
         >
           <img
-            src={slide.imageUrl}
+            src={formatImageUrl(slide.imageUrl)}
             alt={slide.imageAlt || slide.title}
             className="w-full h-full object-cover object-center filter brightness-[0.45] contrast-125 scale-105 transform animate-none"
             loading={idx === 0 ? 'eager' : 'lazy'}

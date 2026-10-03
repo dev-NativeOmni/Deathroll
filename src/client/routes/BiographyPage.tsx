@@ -3,6 +3,7 @@ import { useSite } from '../context/SiteContext';
 import { useAdmin } from '../context/AdminContext';
 import { renderMarkdown } from '../utils/markdown';
 import { Users, Guitar, Flame, Edit3, Award, Disc } from 'lucide-react';
+import { formatImageUrl } from '../utils/imageUtils';
 
 type BioPageProps = {
   navigate: (path: string) => void;
@@ -52,7 +53,7 @@ export const BiographyPage: React.FC<BioPageProps> = ({ navigate }) => {
           <div className="lg:col-span-6 relative">
             <div className="border-4 border-text shadow-punk-lg overflow-hidden bg-surface-subtle">
               <img
-                src={bio.imageUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1200&auto=format&fit=crop"}
+                src={formatImageUrl(bio.imageUrl) || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1200&auto=format&fit=crop"}
                 alt={bio.imageAlt || bio.heading}
                 className="w-full aspect-[4/3] object-cover filter contrast-125"
               />
@@ -90,7 +91,7 @@ export const BiographyPage: React.FC<BioPageProps> = ({ navigate }) => {
                 >
                   <div className="w-24 h-24 mx-auto bg-surface-subtle border-2 border-border rounded-full flex items-center justify-center overflow-hidden">
                     {member.photoUrl ? (
-                      <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" />
+                      <img src={formatImageUrl(member.photoUrl)} alt={member.name} className="w-full h-full object-cover" />
                     ) : (
                       <Users className="w-10 h-10 text-muted group-hover:text-accent transition-colors" />
                     )}

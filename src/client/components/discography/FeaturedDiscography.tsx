@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSite } from '../../context/SiteContext';
 import { useAdmin } from '../../context/AdminContext';
+import { formatImageUrl } from '../../utils/imageUtils';
 import { Disc, Play, ExternalLink, Edit3, ArrowRight, Music, Radio } from 'lucide-react';
 import { Release } from '../../../shared/types';
 
@@ -105,7 +106,7 @@ export const FeaturedDiscography: React.FC<DiscographyProps> = ({ navigate, limi
                   className="relative aspect-square overflow-hidden bg-surface-subtle border border-border cursor-pointer mb-4"
                 >
                   <img
-                    src={release.coverUrl}
+                    src={formatImageUrl(release.coverUrl)}
                     alt={release.coverAlt || release.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"

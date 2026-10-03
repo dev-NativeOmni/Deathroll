@@ -2,6 +2,7 @@ import React from 'react';
 import { useSite } from '../../context/SiteContext';
 import { useAdmin } from '../../context/AdminContext';
 import { Users, ArrowRight, Edit3, ShieldAlert } from 'lucide-react';
+import { formatImageUrl } from '../../utils/imageUtils';
 
 type BioProps = {
   navigate: (path: string) => void;
@@ -20,7 +21,7 @@ export const BiographyPreview: React.FC<BioProps> = ({ navigate }) => {
           <div className="lg:col-span-5 relative">
             <div className="relative border-4 border-text shadow-punk-lg group">
               <img
-                src={bio.imageUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1200&auto=format&fit=crop"}
+                src={formatImageUrl(bio.imageUrl) || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1200&auto=format&fit=crop"}
                 alt={bio.imageAlt || bio.heading}
                 className="w-full aspect-[4/3] object-cover filter contrast-125 grayscale group-hover:grayscale-0 transition-all duration-500"
                 loading="lazy"

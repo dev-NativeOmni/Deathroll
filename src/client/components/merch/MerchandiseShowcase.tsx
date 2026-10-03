@@ -3,6 +3,7 @@ import { useSite } from '../../context/SiteContext';
 import { useAdmin } from '../../context/AdminContext';
 import { ShoppingBag, Tag, Edit3, MessageCircle, ArrowRight, Check, Sparkles } from 'lucide-react';
 import { MerchandiseItem } from '../../../shared/types';
+import { formatImageUrl } from '../../utils/imageUtils';
 
 export const MerchandiseShowcase: React.FC = () => {
   const { content, openDrawer } = useSite();
@@ -86,7 +87,7 @@ export const MerchandiseShowcase: React.FC = () => {
                 {/* Product Image Container */}
                 <div className="aspect-square w-full overflow-hidden bg-surface-subtle border border-border relative mb-4">
                   <img
-                    src={item.imageUrl}
+                    src={formatImageUrl(item.imageUrl)}
                     alt={item.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"

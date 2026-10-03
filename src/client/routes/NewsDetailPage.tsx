@@ -3,6 +3,7 @@ import { useSite } from '../context/SiteContext';
 import { useAdmin } from '../context/AdminContext';
 import { renderMarkdown } from '../utils/markdown';
 import { ArrowLeft, Calendar, Share2, Edit3, ArrowRight } from 'lucide-react';
+import { formatImageUrl } from '../utils/imageUtils';
 
 type NewsDetailProps = {
   slug: string;
@@ -90,7 +91,7 @@ export const NewsDetailPage: React.FC<NewsDetailProps> = ({ slug, navigate }) =>
           {post.imageUrl && (
             <div className="aspect-video w-full overflow-hidden bg-surface-subtle border-2 border-border shadow-punk">
               <img
-                src={post.imageUrl}
+                src={formatImageUrl(post.imageUrl)}
                 alt={post.imageAlt || post.title}
                 className="w-full h-full object-cover"
               />

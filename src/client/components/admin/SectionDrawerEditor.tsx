@@ -325,12 +325,13 @@ const HeroSlidesEditor: React.FC<{
 
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
-                URL Gambar Background (HTTPS)
+                URL Gambar Background (HTTPS / Google Drive Link)
               </label>
               <input
                 type="text"
                 value={slide.imageUrl}
                 onChange={(e) => updateSlide(idx, { imageUrl: e.target.value })}
+                placeholder="https://drive.google.com/file/d/... atau URL gambar"
                 className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
               />
             </div>
@@ -663,12 +664,13 @@ const ReleasesEditor: React.FC<{
 
             <div>
               <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
-                URL Cover Gambar (HTTPS)
+                URL Cover Gambar (HTTPS / Google Drive Link)
               </label>
               <input
                 type="text"
                 value={rel.coverUrl}
                 onChange={(e) => updateRelease(idx, { coverUrl: e.target.value })}
+                placeholder="https://drive.google.com/file/d/... atau URL gambar"
                 className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
               />
             </div>
@@ -856,12 +858,13 @@ const PostsEditor: React.FC<{
 
             <div>
               <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
-                URL Gambar Utama (HTTPS)
+                URL Gambar Utama (HTTPS / Google Drive Link)
               </label>
               <input
                 type="text"
                 value={post.imageUrl || ''}
                 onChange={(e) => updatePost(idx, { imageUrl: e.target.value })}
+                placeholder="https://drive.google.com/file/d/... atau URL gambar"
                 className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
               />
             </div>
@@ -936,12 +939,13 @@ const BiographyEditor: React.FC<{
 
         <div>
           <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
-            URL Foto Band (HTTPS)
+            URL Foto Band (HTTPS / Google Drive Link)
           </label>
           <input
             type="text"
             value={biography.imageUrl || ''}
             onChange={(e) => onChange({ ...biography, imageUrl: e.target.value })}
+            placeholder="https://drive.google.com/file/d/... atau URL gambar"
             className="w-full bg-bg border border-border p-2.5 text-sm text-text focus:border-accent focus:outline-none"
           />
         </div>
@@ -972,8 +976,17 @@ const BiographyEditor: React.FC<{
         </div>
 
         {(biography.members || []).map((m: any, idx: number) => (
-          <div key={idx} className="p-3 bg-bg border border-border flex items-center gap-3">
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div key={idx} className="p-3 bg-bg border border-border space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-heading font-bold text-accent">Personil #{idx + 1}</span>
+              <button
+                onClick={() => deleteMember(idx)}
+                className="p-1 text-red-400 hover:text-red-300"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 type="text"
                 value={m.name}
@@ -989,12 +1002,15 @@ const BiographyEditor: React.FC<{
                 className="bg-surface border border-border p-1.5 text-xs text-text"
               />
             </div>
-            <button
-              onClick={() => deleteMember(idx)}
-              className="p-1.5 text-red-400 hover:text-red-300"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div>
+              <input
+                type="text"
+                value={m.photoUrl || ''}
+                onChange={(e) => updateMember(idx, { photoUrl: e.target.value })}
+                placeholder="URL Foto Avatar (HTTPS / Google Drive)"
+                className="w-full bg-surface border border-border p-1.5 text-xs text-text"
+              />
+            </div>
           </div>
         ))}
       </div>
@@ -1312,12 +1328,13 @@ const MerchandiseEditor: React.FC<{
 
             <div>
               <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
-                URL Gambar Produk (HTTPS)
+                URL Gambar Produk (HTTPS / Google Drive Link)
               </label>
               <input
                 type="text"
                 value={item.imageUrl}
                 onChange={(e) => updateItem(idx, { imageUrl: e.target.value })}
+                placeholder="https://drive.google.com/file/d/... atau URL gambar"
                 className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
               />
             </div>
@@ -1462,12 +1479,13 @@ const VideosEditor: React.FC<{
 
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
-                URL Gambar Thumbnail (HTTPS)
+                URL Gambar Thumbnail (HTTPS / Google Drive Link)
               </label>
               <input
                 type="text"
                 value={vid.thumbnailUrl}
                 onChange={(e) => updateVid(idx, { thumbnailUrl: e.target.value })}
+                placeholder="https://drive.google.com/file/d/... atau URL gambar"
                 className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
               />
             </div>
