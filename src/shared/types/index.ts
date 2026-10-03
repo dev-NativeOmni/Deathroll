@@ -125,6 +125,14 @@ export type ContactInfo = {
   address?: string;
 };
 
+export type AudioTrack = {
+  id: ID;
+  title: string;
+  album: string;
+  audioUrl?: string;
+  bpm?: number;
+};
+
 export type SiteContent = {
   schemaVersion: 1;
   site: SiteSettings;
@@ -137,6 +145,10 @@ export type SiteContent = {
   biography: Biography;
   links: ExternalLink[];
   contact: ContactInfo;
+  audioPlayer?: {
+    enabled: boolean;
+    tracks: AudioTrack[];
+  };
   updatedAt: string;
 };
 

@@ -1,23 +1,39 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, Volume2, VolumeX, Music, Disc } from 'lucide-react';
+import { useSite } from '../../context/SiteContext';
+import { useAdmin } from '../../context/AdminContext';
+import { Play, Pause, SkipForward, Volume2, VolumeX, Music, Disc, Edit3, Settings } from 'lucide-react';
+import { formatImageUrl } from '../../utils/imageUtils';
 
-const TRACKS = [
-  { title: "Pembakar Api Perlawanan", album: "Suara Dari Jalanan", bpm: 180 },
-  { title: "Suara Dari Jalanan", album: "Suara Dari Jalanan", bpm: 175 },
-  { title: "Rebel Soul", album: "Rebel Soul Anthem EP", bpm: 165 },
-  { title: "Tanah Merdeka", album: "Tanah Merdeka", bpm: 170 },
-  { title: "Laskar Berbisa", album: "Tanah Merdeka", bpm: 185 }
+const DEFAULT_TRACKS = [
+  { id: 'track-1', title: "Pembakar Api Perlawanan", album: "Suara Dari Jalanan", bpm: 180 },
+  { id: 'track-2', title: "Suara Dari Jalanan", album: "Suara Dari Jalanan", bpm: 175 },
+  { id: 'track-3', title: "Rebel Soul", album: "Rebel Soul Anthem EP", bpm: 165 },
+  { id: 'track-4', title: "Tanah Merdeka", album: "Tanah Merdeka", bpm: 170 },
+  { id: 'track-5', title: "Laskar Berbisa", album: "Tanah Merdeka", bpm: 185 }
 ];
 
 export const AudioPlayerBar: React.FC = () => {
+  const { content, openDrawer } = useSite();
+  const { isAdmin, isPreviewMode } = useAdmin();
+
+  const tracks = (content.audioPlayer?.tracks && content.audioPlayer.tracks.length > 0)
+    ? content.audioPlayer.tracks
+    : DEFAULT_TRACKS;
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
+
   const audioContextRef = useRef<AudioContext | null>(null);
+  const audioElemRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const currentTrack = TRACKS[currentTrackIndex];
+  const safeIndex = currentTrackIndex < tracks.length ? currentTrackIndex : 0;
+  const currentTrack = tracks[safeIndex] || DEFAULT_TRACKS[0];
+
+  // If track has a direct audioUrl, format Google Drive link if applicable
+  const resolvedAudioUrl = currentTrack.audioUrl ? formatImageUrl(currentTrack.audioUrl) : null;
 
   // Punk rock synth audio generator using Web Audio API when played
   const playPunkChords = () => {
@@ -33,7 +49,7 @@ export const AudioPlayerBar: React.FC = () => {
       if (isMuted) return;
 
       // Create a gritty power chord sound (E5 / G5 / A5 progression)
-      const rootFreq = [164.81, 196.00, 220.00, 146.83][currentTrackIndex % 4];
+      const rootFreq = [164.81, 196.00, 220.00, 146.83][safeIndex % 4];
       const fifthFreq = rootFreq * 1.5;
       const octaveFreq = rootFreq * 2;
 
@@ -69,16 +85,35 @@ export const AudioPlayerBar: React.FC = () => {
   };
 
   useEffect(() => {
+    if (resolvedAudioUrl && audioElemRef.current) {
+      if (isPlaying) {
+        audioElemRef.current.play().catch(() => {});
+      } else {
+        audioElemRef.current.pause();
+      }
+    }
+  }, [isPlaying, resolvedAudioUrl, safeIndex]);
+
+  useEffect(() => {
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            setCurrentTrackIndex((idx) => (idx + 1) % TRACKS.length);
-            return 0;
+        if (resolvedAudioUrl && audioElemRef.current) {
+          const duration = audioElemRef.current.duration || 1;
+          const cur = audioElemRef.current.currentTime || 0;
+          setProgress((cur / duration) * 100);
+          if (cur >= duration) {
+            handleNext();
           }
-          playPunkChords();
-          return prev + 1.2;
-        });
+        } else {
+          setProgress((prev) => {
+            if (prev >= 100) {
+              setCurrentTrackIndex((idx) => (idx + 1) % tracks.length);
+              return 0;
+            }
+            playPunkChords();
+            return prev + 1.2;
+          });
+        }
       }, 400);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -87,19 +122,31 @@ export const AudioPlayerBar: React.FC = () => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isPlaying, currentTrackIndex, isMuted]);
+  }, [isPlaying, safeIndex, isMuted, resolvedAudioUrl, tracks.length]);
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
   };
 
   const handleNext = () => {
-    setCurrentTrackIndex((prev) => (prev + 1) % TRACKS.length);
+    setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
     setProgress(0);
+    if (audioElemRef.current) {
+      audioElemRef.current.currentTime = 0;
+    }
   };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 bg-[#121212]/95 border-t-2 border-accent backdrop-blur-md text-text shadow-2xl py-2 px-4">
+      {resolvedAudioUrl && (
+        <audio
+          ref={audioElemRef}
+          src={resolvedAudioUrl}
+          muted={isMuted}
+          onEnded={handleNext}
+        />
+      )}
+
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         {/* Track Info */}
         <div className="flex items-center space-x-3 min-w-0">
@@ -117,6 +164,18 @@ export const AudioPlayerBar: React.FC = () => {
                   <span className="w-0.5 h-2 bg-accent animate-pulse delay-75"></span>
                   <span className="w-0.5 h-3.5 bg-accent animate-pulse delay-150"></span>
                 </span>
+              )}
+
+              {/* Admin Quick Edit Button */}
+              {isAdmin && !isPreviewMode && (
+                <button
+                  onClick={() => openDrawer('audio')}
+                  className="inline-flex items-center space-x-1 text-[10px] uppercase font-bold bg-amber-950 text-amber-300 border border-amber-600 px-1.5 py-0.5 hover:bg-accent hover:text-white transition-colors ml-2"
+                  title="Klik untuk mengubah lagu preview audio"
+                >
+                  <Edit3 className="w-2.5 h-2.5" />
+                  <span>Edit Track</span>
+                </button>
               )}
             </div>
             <div className="font-bold text-sm text-text truncate">

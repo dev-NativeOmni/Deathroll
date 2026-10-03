@@ -3,7 +3,7 @@ import { SiteContent } from '../../shared/types';
 import { INITIAL_SITE_CONTENT } from '../../shared/constants/initialData';
 import { db, doc, getDoc, setDoc } from '../firebase';
 
-type DrawerType = 'site' | 'hero' | 'shows' | 'releases' | 'merch' | 'videos' | 'posts' | 'biography' | 'links' | 'contact' | 'json' | null;
+type DrawerType = 'site' | 'hero' | 'shows' | 'releases' | 'merch' | 'videos' | 'posts' | 'biography' | 'links' | 'contact' | 'audio' | 'json' | null;
 
 type SiteContextType = {
   content: SiteContent;

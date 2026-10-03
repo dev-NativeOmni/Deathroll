@@ -44,6 +44,8 @@ export const SectionDrawerEditor: React.FC = () => {
         return 'EDITOR BIOGRAFI & PERSONIL';
       case 'links':
         return 'EDITOR LINK SOSIAL & STREAMING';
+      case 'audio':
+        return 'EDITOR PREVIEW TRACK & AUDIO PLAYER';
       case 'site':
       case 'contact':
         return 'PENGATURAN BRAND & KONTAK';
@@ -153,6 +155,16 @@ export const SectionDrawerEditor: React.FC = () => {
                 links={content.links}
                 onChange={(newLinks) =>
                   updateDraft((prev) => ({ ...prev, links: newLinks }))
+                }
+              />
+            )}
+
+            {/* AUDIO PLAYER EDITOR */}
+            {activeDrawer === 'audio' && (
+              <AudioPlayerEditor
+                audioPlayer={content.audioPlayer || { enabled: true, tracks: [] }}
+                onChange={(newAudio) =>
+                  updateDraft((prev) => ({ ...prev, audioPlayer: newAudio }))
                 }
               />
             )}
@@ -1495,3 +1507,146 @@ const VideosEditor: React.FC<{
     </div>
   );
 };
+
+/* =========================================================
+   10. AUDIO PLAYER & PREVIEW TRACKS EDITOR
+   ========================================================= */
+const AudioPlayerEditor: React.FC<{
+  audioPlayer: { enabled: boolean; tracks: any[] };
+  onChange: (audio: { enabled: boolean; tracks: any[] }) => void;
+}> = ({ audioPlayer, onChange }) => {
+  const tracks = audioPlayer.tracks || [];
+
+  const addTrack = () => {
+    const newTrack = {
+      id: `track-${Date.now()}`,
+      title: 'JUDUL LAGU BARU',
+      album: 'Nama Album / Single',
+      audioUrl: '',
+      bpm: 175,
+    };
+    onChange({
+      ...audioPlayer,
+      tracks: [...tracks, newTrack],
+    });
+  };
+
+  const updateTrack = (index: number, updated: any) => {
+    const next = [...tracks];
+    next[index] = { ...next[index], ...updated };
+    onChange({
+      ...audioPlayer,
+      tracks: next,
+    });
+  };
+
+  const deleteTrack = (index: number) => {
+    if (window.confirm(`Hapus lagu "${tracks[index]?.title}" dari player?`)) {
+      onChange({
+        ...audioPlayer,
+        tracks: tracks.filter((_, i) => i !== index),
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Intro & Info Box */}
+      <div className="p-3 bg-bg border-l-4 border-accent text-xs space-y-1">
+        <p className="font-bold text-text">💡 PANDUAN PREVIEW TRACK AUDIO PLAYER:</p>
+        <p className="text-muted">
+          • <strong>Audio URL Dikosongkan:</strong> Player akan memutar efek distorsi riff gitar punk synth bawaan.
+        </p>
+        <p className="text-muted">
+          • <strong>Audio URL Diisi:</strong> Masukkan direct link file <code>.mp3</code> atau link <strong>Google Drive</strong> audio (Pastikan akses: <em>Siapa saja yang memiliki link</em>).
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted uppercase font-heading font-bold">
+          Daftar Lagu di Player Bar ({tracks.length})
+        </span>
+        <button
+          onClick={addTrack}
+          className="flex items-center space-x-1 px-3 py-1.5 bg-accent text-white text-xs font-heading font-bold hover:bg-accent-hover"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Tambah Lagu</span>
+        </button>
+      </div>
+
+      {tracks.length === 0 && (
+        <div className="text-center py-8 border border-dashed border-border p-4">
+          <p className="text-muted text-xs">Belum ada daftar lagu khusus.</p>
+          <button
+            onClick={addTrack}
+            className="mt-3 px-3 py-1.5 bg-surface text-accent border border-accent text-xs font-bold font-heading"
+          >
+            + Tambah Lagu Pertama
+          </button>
+        </div>
+      )}
+
+      {tracks.map((track, idx) => (
+        <div key={track.id || idx} className="p-4 bg-bg border-2 border-border space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
+            <div className="flex items-center space-x-2">
+              <span className="bg-accent text-white px-2 py-0.5 text-xs font-bold font-heading">
+                Track #{idx + 1}
+              </span>
+              <span className="font-bold text-sm truncate max-w-[200px]">{track.title}</span>
+            </div>
+
+            <button
+              onClick={() => deleteTrack(idx)}
+              className="p-1 text-red-400 hover:text-red-300"
+              title="Hapus Lagu"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Judul Lagu (Track Title)
+              </label>
+              <input
+                type="text"
+                value={track.title}
+                onChange={(e) => updateTrack(idx, { title: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Nama Album / Single
+              </label>
+              <input
+                type="text"
+                value={track.album}
+                onChange={(e) => updateTrack(idx, { album: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                URL File Audio MP3 / Google Drive Link (Opsional)
+              </label>
+              <input
+                type="text"
+                value={track.audioUrl || ''}
+                onChange={(e) => updateTrack(idx, { audioUrl: e.target.value })}
+                placeholder="https://.../lagu.mp3 atau link Google Drive"
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+

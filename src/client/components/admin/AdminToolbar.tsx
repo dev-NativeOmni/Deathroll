@@ -19,6 +19,7 @@ import {
   Link2,
   Settings,
   Code,
+  Music,
 } from 'lucide-react';
 
 export const AdminToolbar: React.FC = () => {
@@ -127,6 +128,14 @@ export const AdminToolbar: React.FC = () => {
               >
                 <Link2 className="w-3 h-3 text-accent" />
                 <span>Links</span>
+              </button>
+              <button
+                onClick={() => openDrawer('audio')}
+                className="px-2 py-1 text-xs font-heading font-semibold hover:bg-surface border border-transparent hover:border-border text-muted hover:text-text flex items-center space-x-1"
+                title="Edit Preview Track & Audio Player"
+              >
+                <Music className="w-3 h-3 text-accent" />
+                <span>Audio</span>
               </button>
               <button
                 onClick={() => openDrawer('site')}

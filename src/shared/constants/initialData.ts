@@ -448,5 +448,16 @@ Musik DEATHROLL menggabungkan ketukan drum berkecepatan tinggi, riff gitar melod
     whatsapp: "+6281234567890",
     bookingPhone: "+6281298765432",
     address: "Markas DEATHROLL Rebel Headquarters, Jl. Distorsi No. 13, Denpasar - Bali, Indonesia"
-  }
+  },
+  audioPlayer: {
+    enabled: true,
+    tracks: [
+      { id: "track-1", title: "Pembakar Api Perlawanan", album: "Suara Dari Jalanan", bpm: 180 },
+      { id: "track-2", title: "Suara Dari Jalanan", album: "Suara Dari Jalanan", bpm: 175 },
+      { id: "track-3", title: "Rebel Soul", album: "Rebel Soul Anthem EP", bpm: 165 },
+      { id: "track-4", title: "Tanah Merdeka", album: "Tanah Merdeka", bpm: 170 },
+      { id: "track-5", title: "Laskar Berbisa", album: "Tanah Merdeka", bpm: 185 }
+    ]
+  },
+  updatedAt: "2026-10-03T00:00:00.000Z"
 };
