@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #0b0b0b;
+  --color-surface: #171717;
+  --color-surface-subtle: #222222;
+  --color-text: #f5f1e8;
+  --color-muted: #aaa59b;
+  --color-accent: #d71920;
+  --color-accent-hover: #b5141a;
+  --color-warning: #f1b434;
+  --color-success: #2f9e66;
+  --color-border: #3b3935;
+  --color-border-light: #55524c;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Custom Punk Zine Styling Elements */
+.font-wordmark {
+  font-family: 'Anton', 'Impact', 'Haettenschweiler', 'Arial Narrow Bold', sans-serif;
+  letter-spacing: 0.05em;
+  font-style: italic;
+  font-synthesis: style;
+}
+
+.font-heading {
+  font-family: 'Oswald', 'Impact', 'Arial Black', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Duct Tape & Stencil Badges */
+.tape-badge {
+  background: #f5f1e8;
+  color: #0b0b0b;
+  font-weight: 800;
+  padding: 3px 10px;
+  transform: rotate(-1.5deg);
+  display: inline-block;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.7);
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.05em;
+  border-left: 3px dashed #171717;
+  border-right: 3px dashed #171717;
+}
+
+.tape-badge-red {
+  background: #d71920;
+  color: #ffffff;
+  font-weight: 800;
+  padding: 3px 10px;
+  transform: rotate(1.5deg);
+  display: inline-block;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.7);
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.05em;
+  border-left: 3px dashed #f5f1e8;
+  border-right: 3px dashed #f5f1e8;
+}
+
+.duct-tape-corner {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 70px;
+  height: 24px;
+  background: rgba(245, 241, 232, 0.85);
+  transform: rotate(35deg);
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Rubber Stamps */
+.rubber-stamp-red {
+  display: inline-block;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  font-weight: 900;
+  font-family: 'Oswald', Impact, sans-serif;
+  color: #d71920;
+  border: 3px solid #d71920;
+  border-radius: 4px;
+  transform: rotate(-7deg);
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+  mask-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95));
+}
+
+.rubber-stamp-soldout {
+  display: inline-block;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  font-weight: 900;
+  font-family: 'Oswald', Impact, sans-serif;
+  color: #f1b434;
+  border: 3px solid #f1b434;
+  border-radius: 4px;
+  transform: rotate(5deg);
+  letter-spacing: 0.1em;
+  opacity: 0.92;
+}
+
+/* Polaroid Card Effect */
+.polaroid-card {
+  background: #171717;
+  border: 3px solid #f5f1e8;
+  box-shadow: 6px 6px 0px #000000;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.polaroid-card:hover {
+  transform: translateY(-4px) rotate(-1deg);
+  box-shadow: 8px 8px 0px #d71920;
+}
+
+/* Grunge & Zine Paper Textures */
+.grunge-border {
+  border: 2px solid #3b3935;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.grunge-border-accent {
+  border: 2px solid #d71920;
+  box-shadow: 4px 4px 0px #d71920;
+}
+
+.distressed-bg {
+  background-color: #171717;
+  background-image: radial-gradient(rgba(215, 25, 32, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.halftone-overlay {
+  background-image: radial-gradient(#d71920 1px, transparent 1px);
+  background-size: 8px 8px;
+  opacity: 0.12;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0b0b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3b3935;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d71920;
+}

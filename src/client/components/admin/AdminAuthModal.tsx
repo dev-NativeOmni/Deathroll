@@ -1,0 +1,187 @@
+import React, { useState } from 'react';
+import { useAdmin } from '../../context/AdminContext';
+import { X, Lock, Key, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+
+export const AdminAuthModal: React.FC = () => {
+  const {
+    isLoginModalOpen,
+    closeLoginModal,
+    isInitialized,
+    login,
+    initializeAdmin,
+  } = useAdmin();
+
+  const [token, setToken] = useState('');
+  const [confirmToken, setConfirmToken] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!isLoginModalOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!isInitialized) {
+      if (token.length < 6) {
+        setError('Token minimal harus 6 karakter.');
+        return;
+      }
+      if (token !== confirmToken) {
+        setError('Konfirmasi token tidak cocok.');
+        return;
+      }
+
+      setIsSubmitting(true);
+      const res = await initializeAdmin(token);
+      setIsSubmitting(false);
+      if (!res.success) {
+        setError(res.error || 'Gagal menginisialisasi admin');
+      } else {
+        setToken('');
+        setConfirmToken('');
+      }
+    } else {
+      if (!token) {
+        setError('Masukkan token admin.');
+        return;
+      }
+
+      setIsSubmitting(true);
+      const res = await login(token);
+      setIsSubmitting(false);
+      if (!res.success) {
+        setError(res.error || 'Token salah atau tidak valid');
+      } else {
+        setToken('');
+      }
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
+      <div
+        className="bg-surface border-2 border-accent w-full max-w-md p-6 sm:p-8 shadow-punk-lg relative"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        {/* Close Button */}
+        <button
+          onClick={closeLoginModal}
+          className="absolute top-4 right-4 p-1.5 text-muted hover:text-text hover:bg-surface-subtle transition-colors"
+          aria-label="Tutup modal"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Modal Header */}
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-10 h-10 bg-accent text-white flex items-center justify-center border border-text shadow-punk">
+            <Lock className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 id="modal-title" className="text-2xl font-wordmark text-text tracking-wider">
+              {isInitialized ? 'LOGIN ADMIN DEATHROLL' : 'SETUP ADMIN PERTAMA KALI'}
+            </h2>
+            <p className="text-xs text-muted font-heading uppercase tracking-wider">
+              {isInitialized ? 'In-Place CMS Management' : 'Inisialisasi Token Keamanan'}
+            </p>
+          </div>
+        </div>
+
+        {/* Form Content */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {!isInitialized ? (
+            <>
+              <p className="text-xs text-muted/90 leading-relaxed bg-surface-subtle p-3 border border-border">
+                Situs ini belum memiliki token admin. Buat token rahasia pertama kali untuk mengelola konten band langsung dari halaman ini.
+              </p>
+              <div>
+                <label className="block text-xs font-heading font-bold text-text uppercase tracking-wider mb-1">
+                  Buat Token Admin
+                </label>
+                <div className="relative">
+                  <Key className="w-4 h-4 text-muted absolute left-3 top-3" />
+                  <input
+                    type="password"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
+                    placeholder="Minimal 6 karakter"
+                    className="w-full bg-bg border border-border focus:border-accent text-text pl-9 pr-3 py-2 text-sm focus:outline-none"
+                    autoFocus
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-heading font-bold text-text uppercase tracking-wider mb-1">
+                  Ulangi Token
+                </label>
+                <div className="relative">
+                  <ShieldCheck className="w-4 h-4 text-muted absolute left-3 top-3" />
+                  <input
+                    type="password"
+                    value={confirmToken}
+                    onChange={(e) => setConfirmToken(e.target.value)}
+                    placeholder="Ketik ulang token yang sama"
+                    className="w-full bg-bg border border-border focus:border-accent text-text pl-9 pr-3 py-2 text-sm focus:outline-none"
+                    required
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div>
+              <label className="block text-xs font-heading font-bold text-text uppercase tracking-wider mb-1">
+                Masukkan Token Admin
+              </label>
+              <div className="relative">
+                <Key className="w-4 h-4 text-muted absolute left-3 top-3" />
+                <input
+                  type="password"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  placeholder="Ketik token admin rahasia"
+                  className="w-full bg-bg border border-border focus:border-accent text-text pl-9 pr-3 py-2 text-sm focus:outline-none"
+                  autoFocus
+                  required
+                />
+              </div>
+              <p className="text-[11px] text-muted mt-1.5">
+                Sesi login aktif selama 30 menit dan diperpanjang otomatis saat Anda mengedit konten.
+              </p>
+            </div>
+          )}
+
+          {/* Error display */}
+          {error && (
+            <div className="bg-red-950/80 border border-red-700 text-red-300 p-2.5 text-xs flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-2.5 bg-accent hover:bg-accent-hover text-white font-heading font-bold text-base tracking-wider uppercase shadow-punk transition-all flex items-center justify-center space-x-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Memverifikasi...</span>
+                </>
+              ) : (
+                <span>{isInitialized ? 'MASUK KE MODE ADMIN' : 'SIMPAN & AKTIFKAN ADMIN'}</span>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
