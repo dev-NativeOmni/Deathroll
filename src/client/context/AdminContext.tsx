@@ -11,6 +11,7 @@ type AdminContextType = {
   togglePreviewMode: () => void;
   login: (token: string) => Promise<{ success: boolean; error?: string }>;
   initializeAdmin: (token: string) => Promise<{ success: boolean; error?: string }>;
+  resetAdmin: () => void;
   logout: () => Promise<void>;
   refreshAdminState: () => Promise<void>;
 };
@@ -19,7 +20,7 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,12 +32,20 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const data = await res.json();
         setIsInitialized(data.initialized);
         setIsAdmin(data.authenticated);
+        return;
       }
     } catch (err) {
-      console.error('Failed to check admin state', err);
-    } finally {
-      setIsLoading(false);
+      // Server not connected (Static / Firebase Hosting mode)
     }
+
+    // Client-side fallback check
+    const localToken = localStorage.getItem('deathroll_admin_token');
+    if (localToken) {
+      setIsInitialized(true);
+    } else {
+      setIsInitialized(false);
+    }
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -54,43 +63,61 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Login gagal' };
+      if (res.ok) {
+        setIsAdmin(true);
+        closeLoginModal();
+        return { success: true };
       }
+    } catch (err) {
+      // Server offline, check local token
+    }
+
+    const localToken = localStorage.getItem('deathroll_admin_token');
+    if (localToken && localToken === token) {
       setIsAdmin(true);
       closeLoginModal();
       return { success: true };
-    } catch (err) {
-      return { success: false, error: 'Koneksi ke server bermasalah' };
     }
+
+    // If no token was ever set locally or on server
+    if (!localToken && !isInitialized) {
+      setIsInitialized(false);
+      return { success: false, error: 'Admin belum disetup. Silakan buat token baru.' };
+    }
+
+    return { success: false, error: 'Token admin salah atau tidak cocok.' };
   };
 
   const initializeAdmin = async (token: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const res = await fetch('/api/admin/initialize', {
+      await fetch('/api/admin/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Inisialisasi gagal' };
-      }
-      setIsInitialized(true);
-      setIsAdmin(true);
-      closeLoginModal();
-      return { success: true };
     } catch (err) {
-      return { success: false, error: 'Koneksi ke server bermasalah' };
+      // Ignore server error in static mode
     }
+
+    // Save token locally
+    localStorage.setItem('deathroll_admin_token', token);
+    setIsInitialized(true);
+    setIsAdmin(true);
+    closeLoginModal();
+    return { success: true };
+  };
+
+  const resetAdmin = () => {
+    localStorage.removeItem('deathroll_admin_token');
+    setIsInitialized(false);
+    setIsAdmin(false);
   };
 
   const logout = async () => {
     try {
       await fetch('/api/admin/logout', { method: 'POST' });
     } catch (e) {
-      console.error(e);
+      // Ignore
     } finally {
       setIsAdmin(false);
       setIsPreviewMode(false);
@@ -110,6 +137,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         togglePreviewMode,
         login,
         initializeAdmin,
+        resetAdmin,
         logout,
         refreshAdminState,
       }}

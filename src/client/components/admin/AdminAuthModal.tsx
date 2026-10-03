@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
-import { X, Lock, Key, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Lock, Key, ShieldCheck, AlertCircle, Loader2, RotateCcw } from 'lucide-react';
 
 export const AdminAuthModal: React.FC = () => {
   const {
@@ -9,12 +9,14 @@ export const AdminAuthModal: React.FC = () => {
     isInitialized,
     login,
     initializeAdmin,
+    resetAdmin,
   } = useAdmin();
 
   const [token, setToken] = useState('');
   const [confirmToken, setConfirmToken] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResetConfirm, setIsResetConfirm] = useState(false);
 
   if (!isLoginModalOpen) return null;
 
@@ -58,6 +60,14 @@ export const AdminAuthModal: React.FC = () => {
     }
   };
 
+  const handleResetClick = () => {
+    resetAdmin();
+    setToken('');
+    setConfirmToken('');
+    setError(null);
+    setIsResetConfirm(false);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
       <div
@@ -82,10 +92,10 @@ export const AdminAuthModal: React.FC = () => {
           </div>
           <div>
             <h2 id="modal-title" className="text-2xl font-wordmark text-text tracking-wider">
-              {isInitialized ? 'LOGIN ADMIN DEATHROLL' : 'SETUP ADMIN PERTAMA KALI'}
+              {!isInitialized ? 'SETUP TOKEN ADMIN BARU' : 'LOGIN AKSES ADMIN'}
             </h2>
             <p className="text-xs text-muted font-heading uppercase tracking-wider">
-              {isInitialized ? 'In-Place CMS Management' : 'Inisialisasi Token Keamanan'}
+              {!isInitialized ? 'Inisialisasi Password Rahasia' : 'In-Place CMS Management'}
             </p>
           </div>
         </div>
@@ -95,11 +105,11 @@ export const AdminAuthModal: React.FC = () => {
           {!isInitialized ? (
             <>
               <p className="text-xs text-muted/90 leading-relaxed bg-surface-subtle p-3 border border-border">
-                Situs ini belum memiliki token admin. Buat token rahasia pertama kali untuk mengelola konten band langsung dari halaman ini.
+                Buat token/password admin baru untuk mengelola dan mengedit seluruh isi website band langsung di halaman ini.
               </p>
               <div>
                 <label className="block text-xs font-heading font-bold text-text uppercase tracking-wider mb-1">
-                  Buat Token Admin
+                  Buat Token Admin Baru
                 </label>
                 <div className="relative">
                   <Key className="w-4 h-4 text-muted absolute left-3 top-3" />
@@ -107,7 +117,7 @@ export const AdminAuthModal: React.FC = () => {
                     type="password"
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
-                    placeholder="Minimal 6 karakter"
+                    placeholder="Minimal 6 karakter (cth: deathroll2026)"
                     className="w-full bg-bg border border-border focus:border-accent text-text pl-9 pr-3 py-2 text-sm focus:outline-none"
                     autoFocus
                     required
@@ -143,15 +153,12 @@ export const AdminAuthModal: React.FC = () => {
                   type="password"
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
-                  placeholder="Ketik token admin rahasia"
+                  placeholder="Ketik token admin Anda"
                   className="w-full bg-bg border border-border focus:border-accent text-text pl-9 pr-3 py-2 text-sm focus:outline-none"
                   autoFocus
                   required
                 />
               </div>
-              <p className="text-[11px] text-muted mt-1.5">
-                Sesi login aktif selama 30 menit dan diperpanjang otomatis saat Anda mengedit konten.
-              </p>
             </div>
           )}
 
@@ -176,10 +183,48 @@ export const AdminAuthModal: React.FC = () => {
                   <span>Memverifikasi...</span>
                 </>
               ) : (
-                <span>{isInitialized ? 'MASUK KE MODE ADMIN' : 'SIMPAN & AKTIFKAN ADMIN'}</span>
+                <span>{!isInitialized ? 'SIMPAN & AKTIFKAN ADMIN' : 'MASUK KE MODE ADMIN'}</span>
               )}
             </button>
           </div>
+
+          {/* Reset Option if User Forgot Token */}
+          {isInitialized && (
+            <div className="pt-3 text-center border-t border-border">
+              {!isResetConfirm ? (
+                <button
+                  type="button"
+                  onClick={() => setIsResetConfirm(true)}
+                  className="text-xs text-muted hover:text-accent underline flex items-center justify-center space-x-1 mx-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Lupa token? Reset dan Buat Token Baru</span>
+                </button>
+              ) : (
+                <div className="space-y-2 bg-surface-subtle p-3 border border-border">
+                  <p className="text-xs text-amber-400">
+                    Apakah Anda ingin mereset token admin dan membuat token baru?
+                  </p>
+                  <div className="flex justify-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={handleResetClick}
+                      className="px-3 py-1 bg-red-800 hover:bg-red-700 text-white text-xs font-bold"
+                    >
+                      Ya, Reset Sekarang
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsResetConfirm(false)}
+                      className="px-3 py-1 bg-surface text-muted text-xs"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </form>
       </div>
     </div>
