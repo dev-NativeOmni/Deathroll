@@ -29,6 +29,16 @@ export const VideoGallery: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-3">
+            {isAdmin && !isPreviewMode && (
+              <button
+                onClick={() => openDrawer('videos')}
+                className="flex items-center space-x-1.5 bg-surface-subtle text-accent border border-accent hover:bg-accent hover:text-white px-3 py-1.5 font-heading text-xs font-bold uppercase transition-colors"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Kelola Video ({videoList.length})</span>
+              </button>
+            )}
+
             <a
               href="https://youtube.com/@deathrollofficial"
               target="_blank"
@@ -36,7 +46,7 @@ export const VideoGallery: React.FC = () => {
               className="inline-flex items-center space-x-2 text-accent font-heading font-bold hover:underline tracking-wider text-sm"
             >
               <Youtube className="w-4 h-4" />
-              <span>CHANNEL YOUTUBE RESMI</span>
+              <span>CHANNEL YOUTUBE</span>
             </a>
           </div>
         </div>

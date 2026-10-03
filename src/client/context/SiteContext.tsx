@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { SiteContent } from '../../shared/types';
 import { INITIAL_SITE_CONTENT } from '../../shared/constants/initialData';
 
-type DrawerType = 'site' | 'hero' | 'shows' | 'releases' | 'posts' | 'biography' | 'links' | 'contact' | 'json' | null;
+type DrawerType = 'site' | 'hero' | 'shows' | 'releases' | 'merch' | 'videos' | 'posts' | 'biography' | 'links' | 'contact' | 'json' | null;
 
 type SiteContextType = {
   content: SiteContent;

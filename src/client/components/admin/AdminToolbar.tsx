@@ -89,6 +89,22 @@ export const AdminToolbar: React.FC = () => {
                 <span>Rilisan</span>
               </button>
               <button
+                onClick={() => openDrawer('merch')}
+                className="px-2 py-1 text-xs font-heading font-semibold hover:bg-surface border border-transparent hover:border-border text-muted hover:text-text flex items-center space-x-1"
+                title="Edit Merchandise Katalog"
+              >
+                <Sliders className="w-3 h-3 text-accent" />
+                <span>Merch</span>
+              </button>
+              <button
+                onClick={() => openDrawer('videos')}
+                className="px-2 py-1 text-xs font-heading font-semibold hover:bg-surface border border-transparent hover:border-border text-muted hover:text-text flex items-center space-x-1"
+                title="Edit Video Klip YouTube"
+              >
+                <Disc className="w-3 h-3 text-accent" />
+                <span>Video</span>
+              </button>
+              <button
                 onClick={() => openDrawer('posts')}
                 className="px-2 py-1 text-xs font-heading font-semibold hover:bg-surface border border-transparent hover:border-border text-muted hover:text-text flex items-center space-x-1"
                 title="Edit Berita"

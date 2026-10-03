@@ -34,6 +34,10 @@ export const SectionDrawerEditor: React.FC = () => {
         return 'EDITOR JADWAL TUR & GIGS';
       case 'releases':
         return 'EDITOR DISKOGRAFI & RILISAN';
+      case 'merch':
+        return 'EDITOR MERCHANDISE RESMI';
+      case 'videos':
+        return 'EDITOR VIDEO KLIP & FOOTAGE';
       case 'posts':
         return 'EDITOR BERITA & ARTIKEL';
       case 'biography':
@@ -99,6 +103,26 @@ export const SectionDrawerEditor: React.FC = () => {
                 releases={content.releases}
                 onChange={(newReleases) =>
                   updateDraft((prev) => ({ ...prev, releases: newReleases }))
+                }
+              />
+            )}
+
+            {/* MERCHANDISE EDITOR */}
+            {activeDrawer === 'merch' && (
+              <MerchandiseEditor
+                merchandise={content.merchandise || []}
+                onChange={(newMerch) =>
+                  updateDraft((prev) => ({ ...prev, merchandise: newMerch }))
+                }
+              />
+            )}
+
+            {/* VIDEOS EDITOR */}
+            {activeDrawer === 'videos' && (
+              <VideosEditor
+                videos={content.videos || []}
+                onChange={(newVideos) =>
+                  updateDraft((prev) => ({ ...prev, videos: newVideos }))
                 }
               />
             )}
@@ -1159,6 +1183,297 @@ const SiteSettingsEditor: React.FC<{
           />
         </div>
       </div>
+    </div>
+  );
+};
+
+/* =========================================================
+   8. MERCHANDISE EDITOR COMPONENT
+   ========================================================= */
+const MerchandiseEditor: React.FC<{
+  merchandise: any[];
+  onChange: (merch: any[]) => void;
+}> = ({ merchandise, onChange }) => {
+  const addMerch = () => {
+    const newItem = {
+      id: `merch-${Date.now()}`,
+      name: 'NAMA PRODUK MERCHANDISE',
+      category: 'tshirt',
+      price: 185000,
+      formattedPrice: 'Rp 185.000',
+      imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800&auto=format&fit=crop',
+      badge: 'LIMITED DROP',
+      orderUrl: '',
+      inStock: true,
+      position: merchandise.length,
+    };
+    onChange([...merchandise, newItem]);
+  };
+
+  const updateItem = (index: number, updated: any) => {
+    const next = [...merchandise];
+    next[index] = { ...next[index], ...updated };
+    onChange(next);
+  };
+
+  const deleteItem = (index: number) => {
+    if (window.confirm(`Hapus produk "${merchandise[index].name}"?`)) {
+      onChange(merchandise.filter((_, i) => i !== index));
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted uppercase font-heading font-bold">
+          Katalog Merchandise ({merchandise.length})
+        </span>
+        <button
+          onClick={addMerch}
+          className="flex items-center space-x-1 px-3 py-1.5 bg-accent text-white text-xs font-heading font-bold hover:bg-accent-hover"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Tambah Produk</span>
+        </button>
+      </div>
+
+      {merchandise.map((item, idx) => (
+        <div key={item.id} className="p-4 bg-bg border-2 border-border space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
+            <div className="flex items-center space-x-2">
+              <span className="bg-accent text-white px-2 py-0.5 text-xs font-bold font-heading">
+                #{idx + 1}
+              </span>
+              <span className="font-bold text-sm truncate max-w-[200px]">{item.name}</span>
+            </div>
+
+            <button
+              onClick={() => deleteItem(idx)}
+              className="p-1 text-red-400 hover:text-red-300"
+              title="Hapus Produk"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Nama Produk
+              </label>
+              <input
+                type="text"
+                value={item.name}
+                onChange={(e) => updateItem(idx, { name: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Kategori
+              </label>
+              <select
+                value={item.category}
+                onChange={(e) => updateItem(idx, { category: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              >
+                <option value="tshirt">Kaos / T-Shirt</option>
+                <option value="vinyl">Vinyl Piringan Hitam</option>
+                <option value="cassette">Kaset Pita</option>
+                <option value="hoodie">Hoodie / Jaket</option>
+                <option value="accessories">Topi & Aksesoris</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Harga Format Teks (cth: Rp 185.000)
+              </label>
+              <input
+                type="text"
+                value={item.formattedPrice}
+                onChange={(e) => updateItem(idx, { formattedPrice: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Badge / Stempel (cth: LIMITED DROP)
+              </label>
+              <input
+                type="text"
+                value={item.badge || ''}
+                onChange={(e) => updateItem(idx, { badge: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                URL Gambar Produk (HTTPS)
+              </label>
+              <input
+                type="text"
+                value={item.imageUrl}
+                onChange={(e) => updateItem(idx, { imageUrl: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <input
+                type="checkbox"
+                id={`stock-${item.id}`}
+                checked={item.inStock}
+                onChange={(e) => updateItem(idx, { inStock: e.target.checked })}
+                className="w-4 h-4 accent-red-600"
+              />
+              <label htmlFor={`stock-${item.id}`} className="text-xs text-text font-bold">
+                Status Stok Tersedia (In Stock)
+              </label>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* =========================================================
+   9. VIDEOS EDITOR COMPONENT
+   ========================================================= */
+const VideosEditor: React.FC<{
+  videos: any[];
+  onChange: (vids: any[]) => void;
+}> = ({ videos, onChange }) => {
+  const addVideo = () => {
+    const newVid = {
+      id: `vid-${Date.now()}`,
+      title: 'JUDUL VIDEO KLIP / LIVE CONCERT',
+      category: 'music_video',
+      youtubeId: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=800&auto=format&fit=crop',
+      duration: '04:00',
+      publishedAt: '2026-01-01',
+    };
+    onChange([...videos, newVid]);
+  };
+
+  const updateVid = (index: number, updated: any) => {
+    const next = [...videos];
+    next[index] = { ...next[index], ...updated };
+    onChange(next);
+  };
+
+  const deleteVid = (index: number) => {
+    if (window.confirm(`Hapus video "${videos[index].title}"?`)) {
+      onChange(videos.filter((_, i) => i !== index));
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted uppercase font-heading font-bold">
+          Daftar Video Klip & Footage ({videos.length})
+        </span>
+        <button
+          onClick={addVideo}
+          className="flex items-center space-x-1 px-3 py-1.5 bg-accent text-white text-xs font-heading font-bold hover:bg-accent-hover"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Tambah Video</span>
+        </button>
+      </div>
+
+      {videos.map((vid, idx) => (
+        <div key={vid.id} className="p-4 bg-bg border-2 border-border space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
+            <div className="flex items-center space-x-2">
+              <span className="bg-accent text-white px-2 py-0.5 text-xs font-bold font-heading">
+                #{idx + 1}
+              </span>
+              <span className="font-bold text-sm truncate max-w-[200px]">{vid.title}</span>
+            </div>
+
+            <button
+              onClick={() => deleteVid(idx)}
+              className="p-1 text-red-400 hover:text-red-300"
+              title="Hapus Video"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Judul Video
+              </label>
+              <input
+                type="text"
+                value={vid.title}
+                onChange={(e) => updateVid(idx, { title: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Kategori Video
+              </label>
+              <select
+                value={vid.category}
+                onChange={(e) => updateVid(idx, { category: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              >
+                <option value="music_video">Official Music Video</option>
+                <option value="live_concert">Live Concert Footage</option>
+                <option value="documentary">Mini Documentary / Studio</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Durasi (cth: 03:45)
+              </label>
+              <input
+                type="text"
+                value={vid.duration}
+                onChange={(e) => updateVid(idx, { duration: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                Link YouTube URL atau ID Video
+              </label>
+              <input
+                type="text"
+                value={vid.youtubeId}
+                onChange={(e) => updateVid(idx, { youtubeId: e.target.value })}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
+                URL Gambar Thumbnail (HTTPS)
+              </label>
+              <input
+                type="text"
+                value={vid.thumbnailUrl}
+                onChange={(e) => updateVid(idx, { thumbnailUrl: e.target.value })}
+                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

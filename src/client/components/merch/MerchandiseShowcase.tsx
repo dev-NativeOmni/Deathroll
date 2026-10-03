@@ -39,7 +39,7 @@ export const MerchandiseShowcase: React.FC = () => {
           <div className="flex items-center space-x-3">
             {isAdmin && !isPreviewMode && (
               <button
-                onClick={() => openDrawer('site')}
+                onClick={() => openDrawer('merch')}
                 className="flex items-center space-x-1.5 bg-surface-subtle text-accent border border-accent hover:bg-accent hover:text-white px-3 py-1.5 font-heading text-xs font-bold uppercase transition-colors"
               >
                 <Edit3 className="w-3.5 h-3.5" />
