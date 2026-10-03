@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "deathrollofficial",
     "public": "dist",
     "ignore": [
       "firebase.json",
