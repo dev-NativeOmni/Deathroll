@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { SiteContent } from '../../shared/types';
 import { INITIAL_SITE_CONTENT } from '../../shared/constants/initialData';
+import { db, doc, getDoc, setDoc } from '../firebase';
 
 type DrawerType = 'site' | 'hero' | 'shows' | 'releases' | 'merch' | 'videos' | 'posts' | 'biography' | 'links' | 'contact' | 'json' | null;
 
@@ -38,7 +39,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [conflictRevision, setConflictRevision] = useState<number | null>(null);
 
   const fetchContent = useCallback(async () => {
-    // 1. First load from localStorage if available
+    // 1. Fast initial load from localStorage if available
     try {
       const cached = localStorage.getItem('deathroll_content');
       if (cached) {
@@ -48,9 +49,30 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (e) {}
 
-    // 2. Try fetching from server API if running in fullstack mode
+    // 2. Fetch official cloud data from Cloud Firestore
     try {
       setIsLoading(true);
+      const docRef = doc(db, 'content', 'siteContent');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data && data.content) {
+          setServerContent(data.content);
+          setDraftContent(data.content);
+          setRevision(data.revision || 1);
+          setIsDirty(false);
+          try { localStorage.setItem('deathroll_content', JSON.stringify(data.content)); } catch (e) {}
+          return;
+        }
+      }
+    } catch (fsErr) {
+      console.warn('Firestore load fallback to local/API:', fsErr);
+    } finally {
+      setIsLoading(false);
+    }
+
+    // 3. Fallback to API if running fullstack Express
+    try {
       const res = await fetch('/api/content');
       const contentType = res.headers.get('content-type') || '';
       if (res.ok && contentType.includes('application/json')) {
@@ -64,9 +86,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     } catch (err) {
-      // Static mode / offline: smoothly rely on localStorage
-    } finally {
-      setIsLoading(false);
+      // Offline mode
     }
   }, []);
 
@@ -100,13 +120,26 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const saveChanges = async (): Promise<boolean> => {
     setIsSaving(true);
     setSaveStatus('saving');
-    setStatusMessage('Menyimpan perubahan...');
+    setStatusMessage('Menyimpan ke Cloud Database...');
 
     try {
       let serverSaved = false;
       let newRevision = revision + 1;
 
-      // Try saving to backend API if available
+      // 1. Save directly to Google Cloud Firestore
+      try {
+        const docRef = doc(db, 'content', 'siteContent');
+        await setDoc(docRef, {
+          content: draftContent,
+          revision: newRevision,
+          updatedAt: new Date().toISOString(),
+        });
+        serverSaved = true;
+      } catch (fsErr) {
+        console.warn('Firestore write error:', fsErr);
+      }
+
+      // 2. Also try API if fullstack Express is running
       try {
         const res = await fetch('/api/admin/content', {
           method: 'POST',
@@ -116,28 +149,15 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
             expectedRevision: revision,
           }),
         });
-
         const contentType = res.headers.get('content-type') || '';
-        if (res.status === 409 && contentType.includes('application/json')) {
-          const data = await res.json();
-          setSaveStatus('conflict');
-          setConflictRevision(data.currentRevision || revision + 1);
-          setStatusMessage('Terjadi konflik versi! Server telah diperbarui oleh sesi lain.');
-          return false;
-        }
-
         if (res.ok && contentType.includes('application/json')) {
           const data = await res.json();
-          if (data && data.revision) {
-            newRevision = data.revision;
-            serverSaved = true;
-          }
+          if (data && data.revision) newRevision = data.revision;
+          serverSaved = true;
         }
-      } catch (netErr) {
-        // Static hosting mode (Firebase Hosting static without server)
-      }
+      } catch (netErr) {}
 
-      // Always persist to localStorage for instant local durability
+      // 3. Always persist to localStorage
       try {
         localStorage.setItem('deathroll_content', JSON.stringify(draftContent));
       } catch (e) {}
@@ -146,7 +166,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRevision(newRevision);
       setIsDirty(false);
       setSaveStatus('saved');
-      setStatusMessage(serverSaved ? 'Perubahan berhasil disimpan ke server!' : 'Perubahan berhasil disimpan!');
+      setStatusMessage(serverSaved ? 'Perubahan berhasil disimpan ke Cloud Database!' : 'Perubahan berhasil disimpan!');
 
       setTimeout(() => {
         setSaveStatus('idle');

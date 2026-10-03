@@ -4,6 +4,7 @@ import { useSite } from '../../context/SiteContext';
 import { MessageSquare, Send, MapPin, Music, Trash2, CheckCircle2, Flame, Loader2 } from 'lucide-react';
 import { ShoutboxMessage } from '../../../shared/types';
 import { INITIAL_SHOUTBOX_MESSAGES } from '../../../shared/constants/initialData';
+import { db, collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, limit } from '../../firebase';
 
 export const RebelShoutbox: React.FC = () => {
   const { isAdmin } = useAdmin();
@@ -29,7 +30,32 @@ export const RebelShoutbox: React.FC = () => {
       }
     } catch (e) {}
 
-    // 2. Try fetching from server API
+    // 2. Fetch from Cloud Firestore
+    try {
+      const q = query(collection(db, 'shoutbox'), orderBy('createdAt', 'desc'), limit(50));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const cloudShouts: ShoutboxMessage[] = [];
+        querySnapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          cloudShouts.push({
+            id: docSnap.id,
+            authorName: d.authorName,
+            city: d.city,
+            message: d.message,
+            favoriteTrack: d.favoriteTrack,
+            createdAt: d.createdAt || new Date().toISOString(),
+          });
+        });
+        setMessages(cloudShouts);
+        try { localStorage.setItem('deathroll_shoutbox', JSON.stringify(cloudShouts)); } catch (e) {}
+        return;
+      }
+    } catch (fsErr) {
+      console.warn('Firestore shoutbox load error:', fsErr);
+    }
+
+    // 3. Try fetching from server API if fullstack
     try {
       const res = await fetch('/api/shoutbox');
       const contentType = res.headers.get('content-type') || '';
@@ -40,9 +66,7 @@ export const RebelShoutbox: React.FC = () => {
           try { localStorage.setItem('deathroll_shoutbox', JSON.stringify(data)); } catch (e) {}
         }
       }
-    } catch (e) {
-      // Static mode
-    }
+    } catch (e) {}
   };
 
   useEffect(() => {
@@ -69,30 +93,21 @@ export const RebelShoutbox: React.FC = () => {
     };
 
     try {
-      // Try API if available
+      // 1. Save to Cloud Firestore
       try {
-        const res = await fetch('/api/shoutbox', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            authorName: authorName.trim(),
-            city: city.trim(),
-            message: message.trim(),
-            favoriteTrack: favoriteTrack || undefined,
-          }),
+        const docRef = await addDoc(collection(db, 'shoutbox'), {
+          authorName: newShout.authorName,
+          city: newShout.city,
+          message: newShout.message,
+          favoriteTrack: newShout.favoriteTrack || '',
+          createdAt: newShout.createdAt,
         });
-
-        const contentType = res.headers.get('content-type') || '';
-        if (res.ok && contentType.includes('application/json')) {
-          const serverShout = await res.json();
-          if (serverShout && serverShout.id) {
-            newShout.id = serverShout.id;
-          }
-        }
-      } catch (netErr) {
-        // Static hosting mode
+        newShout.id = docRef.id;
+      } catch (fsErr) {
+        console.warn('Firestore shout submit error:', fsErr);
       }
 
+      // 2. Local updates
       setMessages((prev) => {
         const updated = [newShout, ...prev];
         try { localStorage.setItem('deathroll_shoutbox', JSON.stringify(updated)); } catch (e) {}
@@ -114,6 +129,9 @@ export const RebelShoutbox: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Hapus pesan shoutbox ini?')) return;
+    try {
+      await deleteDoc(doc(db, 'shoutbox', id));
+    } catch (e) {}
     try {
       await fetch(`/api/admin/shoutbox/${id}`, { method: 'DELETE' });
     } catch (e) {}

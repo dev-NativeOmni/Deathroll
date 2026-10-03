@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Website site content (Hero, Tour, Discography, Merch, News, Bio, etc.)
+    match /content/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Fan Shoutbox / Guestbook messages
+    match /shoutbox/{messageId} {
+      allow read: if true;
+      allow create: if request.resource.data.authorName is string && request.resource.data.message is string;
+      allow update, delete: if true;
+    }
+  }
+}
