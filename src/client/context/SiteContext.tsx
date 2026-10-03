@@ -47,9 +47,19 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setDraftContent(data.content);
         setRevision(data.revision);
         setIsDirty(false);
+        try { localStorage.setItem('deathroll_content', JSON.stringify(data.content)); } catch (e) {}
+        return;
       }
     } catch (err) {
-      console.error('Failed to load site content', err);
+      // Offline / Static mode fallback to localStorage
+      try {
+        const cached = localStorage.getItem('deathroll_content');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setServerContent(parsed);
+          setDraftContent(parsed);
+        }
+      } catch (e) {}
     } finally {
       setIsLoading(false);
     }
