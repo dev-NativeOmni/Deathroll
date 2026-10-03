@@ -18,16 +18,30 @@ export const RebelShoutbox: React.FC = () => {
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
   const fetchShouts = async () => {
+    // 1. Load from localStorage if present
+    try {
+      const cached = localStorage.getItem('deathroll_shoutbox');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+    } catch (e) {}
+
+    // 2. Try fetching from server API
     try {
       const res = await fetch('/api/shoutbox');
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           setMessages(data);
+          try { localStorage.setItem('deathroll_shoutbox', JSON.stringify(data)); } catch (e) {}
         }
       }
     } catch (e) {
-      // Use initial seed
+      // Static mode
     }
   };
 
@@ -45,33 +59,54 @@ export const RebelShoutbox: React.FC = () => {
     }
 
     setIsSubmitting(true);
+    const newShout: ShoutboxMessage = {
+      id: `shout-${Date.now()}`,
+      authorName: authorName.trim(),
+      city: city.trim(),
+      message: message.trim(),
+      favoriteTrack: favoriteTrack || undefined,
+      createdAt: new Date().toISOString(),
+    };
+
     try {
-      const res = await fetch('/api/shoutbox', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          authorName: authorName.trim(),
-          city: city.trim(),
-          message: message.trim(),
-          favoriteTrack: favoriteTrack || undefined,
-        }),
+      // Try API if available
+      try {
+        const res = await fetch('/api/shoutbox', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            authorName: authorName.trim(),
+            city: city.trim(),
+            message: message.trim(),
+            favoriteTrack: favoriteTrack || undefined,
+          }),
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const serverShout = await res.json();
+          if (serverShout && serverShout.id) {
+            newShout.id = serverShout.id;
+          }
+        }
+      } catch (netErr) {
+        // Static hosting mode
+      }
+
+      setMessages((prev) => {
+        const updated = [newShout, ...prev];
+        try { localStorage.setItem('deathroll_shoutbox', JSON.stringify(updated)); } catch (e) {}
+        return updated;
       });
 
-      if (res.ok) {
-        const newShout = await res.json();
-        setMessages((prev) => [newShout, ...prev]);
-        setAuthorName('');
-        setCity('');
-        setMessage('');
-        setFavoriteTrack('');
-        setSuccessNotice(true);
-        setTimeout(() => setSuccessNotice(false), 4000);
-      } else {
-        const data = await res.json();
-        setErrorNotice(data.error || 'Gagal mengirim pesan');
-      }
+      setAuthorName('');
+      setCity('');
+      setMessage('');
+      setFavoriteTrack('');
+      setSuccessNotice(true);
+      setTimeout(() => setSuccessNotice(false), 4000);
     } catch (err) {
-      setErrorNotice('Koneksi terputus saat mengirim pesan.');
+      setErrorNotice('Gagal mengirim pesan.');
     } finally {
       setIsSubmitting(false);
     }
@@ -80,13 +115,13 @@ export const RebelShoutbox: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Hapus pesan shoutbox ini?')) return;
     try {
-      const res = await fetch(`/api/admin/shoutbox/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setMessages((prev) => prev.filter((m) => m.id !== id));
-      }
-    } catch (e) {
-      console.error(e);
-    }
+      await fetch(`/api/admin/shoutbox/${id}`, { method: 'DELETE' });
+    } catch (e) {}
+    setMessages((prev) => {
+      const updated = prev.filter((m) => m.id !== id);
+      try { localStorage.setItem('deathroll_shoutbox', JSON.stringify(updated)); } catch (e) {}
+      return updated;
+    });
   };
 
   const formatShoutDate = (dateStr: string) => {

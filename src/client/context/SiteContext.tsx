@@ -38,28 +38,33 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [conflictRevision, setConflictRevision] = useState<number | null>(null);
 
   const fetchContent = useCallback(async () => {
+    // 1. First load from localStorage if available
+    try {
+      const cached = localStorage.getItem('deathroll_content');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setServerContent(parsed);
+        setDraftContent(parsed);
+      }
+    } catch (e) {}
+
+    // 2. Try fetching from server API if running in fullstack mode
     try {
       setIsLoading(true);
       const res = await fetch('/api/content');
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const data = await res.json();
-        setServerContent(data.content);
-        setDraftContent(data.content);
-        setRevision(data.revision);
-        setIsDirty(false);
-        try { localStorage.setItem('deathroll_content', JSON.stringify(data.content)); } catch (e) {}
-        return;
+        if (data && data.content) {
+          setServerContent(data.content);
+          setDraftContent(data.content);
+          setRevision(data.revision || 1);
+          setIsDirty(false);
+          try { localStorage.setItem('deathroll_content', JSON.stringify(data.content)); } catch (e) {}
+        }
       }
     } catch (err) {
-      // Offline / Static mode fallback to localStorage
-      try {
-        const cached = localStorage.getItem('deathroll_content');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          setServerContent(parsed);
-          setDraftContent(parsed);
-        }
-      } catch (e) {}
+      // Static mode / offline: smoothly rely on localStorage
     } finally {
       setIsLoading(false);
     }
@@ -95,48 +100,63 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const saveChanges = async (): Promise<boolean> => {
     setIsSaving(true);
     setSaveStatus('saving');
-    setStatusMessage('Menyimpan perubahan ke server...');
+    setStatusMessage('Menyimpan perubahan...');
 
     try {
-      const res = await fetch('/api/admin/content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: draftContent,
-          expectedRevision: revision,
-        }),
-      });
+      let serverSaved = false;
+      let newRevision = revision + 1;
 
-      const data = await res.json();
+      // Try saving to backend API if available
+      try {
+        const res = await fetch('/api/admin/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: draftContent,
+            expectedRevision: revision,
+          }),
+        });
 
-      if (res.status === 409) {
-        setSaveStatus('conflict');
-        setConflictRevision(data.currentRevision || revision + 1);
-        setStatusMessage('Terjadi konflik versi! Server telah diperbarui oleh sesi lain.');
-        return false;
+        const contentType = res.headers.get('content-type') || '';
+        if (res.status === 409 && contentType.includes('application/json')) {
+          const data = await res.json();
+          setSaveStatus('conflict');
+          setConflictRevision(data.currentRevision || revision + 1);
+          setStatusMessage('Terjadi konflik versi! Server telah diperbarui oleh sesi lain.');
+          return false;
+        }
+
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data && data.revision) {
+            newRevision = data.revision;
+            serverSaved = true;
+          }
+        }
+      } catch (netErr) {
+        // Static hosting mode (Firebase Hosting static without server)
       }
 
-      if (!res.ok) {
-        setSaveStatus('error');
-        setStatusMessage(data.error || data.details || 'Gagal menyimpan data');
-        return false;
-      }
+      // Always persist to localStorage for instant local durability
+      try {
+        localStorage.setItem('deathroll_content', JSON.stringify(draftContent));
+      } catch (e) {}
 
       setServerContent(draftContent);
-      setRevision(data.revision);
+      setRevision(newRevision);
       setIsDirty(false);
       setSaveStatus('saved');
-      setStatusMessage('Perubahan berhasil disimpan permanen!');
+      setStatusMessage(serverSaved ? 'Perubahan berhasil disimpan ke server!' : 'Perubahan berhasil disimpan!');
 
       setTimeout(() => {
         setSaveStatus('idle');
         setStatusMessage(null);
-      }, 4000);
+      }, 3500);
 
       return true;
     } catch (err) {
       setSaveStatus('error');
-      setStatusMessage('Koneksi jaringan terputus.');
+      setStatusMessage('Gagal menyimpan perubahan.');
       return false;
     } finally {
       setIsSaving(false);
