@@ -14,11 +14,13 @@ import {
   Newspaper,
   BookOpen,
   Link2,
-  Settings,
   Code,
   Eye,
+  Upload,
+  Music,
 } from 'lucide-react';
 import { HeroSlide, Show, Release, Post, ExternalLink } from '../../../shared/types';
+import { formatAudioUrl } from '../../utils/imageUtils';
 
 export const SectionDrawerEditor: React.FC = () => {
   const { content, activeDrawer, closeDrawer, updateDraft } = useSite();
@@ -1516,6 +1518,7 @@ const AudioPlayerEditor: React.FC<{
   onChange: (audio: { enabled: boolean; tracks: any[] }) => void;
 }> = ({ audioPlayer, onChange }) => {
   const tracks = audioPlayer.tracks || [];
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   const addTrack = () => {
     const newTrack = {
@@ -1549,16 +1552,47 @@ const AudioPlayerEditor: React.FC<{
     }
   };
 
+  const handleFileUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Ukuran file audio maksimal 5MB.');
+      return;
+    }
+
+    setUploadingIndex(index);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        updateTrack(index, { audioUrl: dataUrl });
+      }
+      setUploadingIndex(null);
+    };
+    reader.onerror = () => {
+      alert('Gagal membaca file audio.');
+      setUploadingIndex(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="space-y-6">
       {/* Intro & Info Box */}
-      <div className="p-3 bg-bg border-l-4 border-accent text-xs space-y-1">
-        <p className="font-bold text-text">💡 PANDUAN PREVIEW TRACK AUDIO PLAYER:</p>
-        <p className="text-muted">
-          • <strong>Audio URL Dikosongkan:</strong> Player akan memutar efek distorsi riff gitar punk synth bawaan.
+      <div className="p-3 bg-bg border-l-4 border-accent text-xs space-y-1.5">
+        <p className="font-bold text-text flex items-center space-x-1.5">
+          <Music className="w-4 h-4 text-accent" />
+          <span>PANDUAN PREVIEW TRACK AUDIO PLAYER:</span>
         </p>
         <p className="text-muted">
-          • <strong>Audio URL Diisi:</strong> Masukkan direct link file <code>.mp3</code> atau link <strong>Google Drive</strong> audio (Pastikan akses: <em>Siapa saja yang memiliki link</em>).
+          • <strong>Upload Langsung (Disarankan):</strong> Klik tombol <em>"Upload File Audio"</em> untuk memilih file <code>.mp3</code>, <code>.opus</code>, <code>.wav</code>, atau <code>.m4a</code> langsung dari laptop/HP kamu. File akan disimpan langsung ke database dan diputar 100% lancar!
+        </p>
+        <p className="text-muted">
+          • <strong>Link Google Drive / URL:</strong> Masukkan direct link audio atau link Google Drive (Pastikan akses diset ke <em>"Siapa saja yang memiliki link"</em>).
+        </p>
+        <p className="text-muted">
+          • <strong>Kosongkan:</strong> Jika audio URL kosong, player akan memutar efek distorsi riff gitar punk synth bawaan.
         </p>
       </div>
 
@@ -1631,17 +1665,58 @@ const AudioPlayerEditor: React.FC<{
               />
             </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-[11px] font-heading font-bold text-muted uppercase mb-1">
-                URL File Audio MP3 / Google Drive Link (Opsional)
+            <div className="sm:col-span-2 space-y-2">
+              <label className="block text-[11px] font-heading font-bold text-muted uppercase">
+                Sumber File Audio (Upload Langsung / Link Drive)
               </label>
+
+              {/* Direct File Upload Trigger */}
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 bg-accent text-white text-xs font-heading font-bold hover:bg-accent-hover shadow-punk transition-all">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>
+                    {uploadingIndex === idx ? 'Memproses Audio...' : '📁 Upload File Audio (MP3/Opus/WAV)'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="audio/*,.mp3,.opus,.wav,.m4a,.ogg"
+                    onChange={(e) => handleFileUpload(idx, e)}
+                    className="hidden"
+                    disabled={uploadingIndex === idx}
+                  />
+                </label>
+
+                {track.audioUrl && (
+                  <button
+                    onClick={() => updateTrack(idx, { audioUrl: '' })}
+                    className="px-2 py-1 bg-surface border border-red-800 text-red-400 hover:text-red-300 text-xs font-heading"
+                    title="Hapus file audio kustom"
+                  >
+                    Hapus Audio
+                  </button>
+                )}
+              </div>
+
+              {/* Manual URL Input */}
               <input
                 type="text"
-                value={track.audioUrl || ''}
+                value={track.audioUrl?.startsWith('data:audio') ? '[File Audio Tersimpan di Database]' : (track.audioUrl || '')}
                 onChange={(e) => updateTrack(idx, { audioUrl: e.target.value })}
-                placeholder="https://.../lagu.mp3 atau link Google Drive"
-                className="w-full bg-surface border border-border p-2 text-sm text-text focus:border-accent focus:outline-none"
+                placeholder="Atau paste link Google Drive / URL .mp3 disini"
+                className="w-full bg-surface border border-border p-2 text-xs text-text focus:border-accent focus:outline-none font-mono"
               />
+
+              {/* Live Audio Test Player */}
+              {track.audioUrl && (
+                <div className="pt-2 p-2.5 bg-surface border border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold text-accent">Tes Putar Lagu:</span>
+                  <audio
+                    controls
+                    src={formatAudioUrl(track.audioUrl)}
+                    className="h-7 w-full sm:w-64 max-w-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1649,4 +1724,5 @@ const AudioPlayerEditor: React.FC<{
     </div>
   );
 };
+
 

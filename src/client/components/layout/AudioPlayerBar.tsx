@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSite } from '../../context/SiteContext';
 import { useAdmin } from '../../context/AdminContext';
-import { Play, Pause, SkipForward, Volume2, VolumeX, Music, Disc, Edit3, Settings } from 'lucide-react';
-import { formatImageUrl } from '../../utils/imageUtils';
+import { Play, Pause, SkipForward, Volume2, VolumeX, Music, Disc, Edit3, Settings, AlertCircle } from 'lucide-react';
+import { formatAudioUrl } from '../../utils/imageUtils';
 
 const DEFAULT_TRACKS = [
   { id: 'track-1', title: "Pembakar Api Perlawanan", album: "Suara Dari Jalanan", bpm: 180 },
@@ -24,6 +24,7 @@ export const AudioPlayerBar: React.FC = () => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [audioError, setAudioError] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioElemRef = useRef<HTMLAudioElement | null>(null);
@@ -32,8 +33,8 @@ export const AudioPlayerBar: React.FC = () => {
   const safeIndex = currentTrackIndex < tracks.length ? currentTrackIndex : 0;
   const currentTrack = tracks[safeIndex] || DEFAULT_TRACKS[0];
 
-  // If track has a direct audioUrl, format Google Drive link if applicable
-  const resolvedAudioUrl = currentTrack.audioUrl ? formatImageUrl(currentTrack.audioUrl) : null;
+  // Resolve audio URL properly using formatAudioUrl
+  const resolvedAudioUrl = currentTrack.audioUrl ? formatAudioUrl(currentTrack.audioUrl) : null;
 
   // Punk rock synth audio generator using Web Audio API when played
   const playPunkChords = () => {
@@ -85,19 +86,22 @@ export const AudioPlayerBar: React.FC = () => {
   };
 
   useEffect(() => {
+    setAudioError(false);
     if (resolvedAudioUrl && audioElemRef.current) {
+      audioElemRef.current.load();
       if (isPlaying) {
-        audioElemRef.current.play().catch(() => {});
-      } else {
-        audioElemRef.current.pause();
+        audioElemRef.current.play().catch((err) => {
+          console.warn('Direct audio play failed, falling back to synth:', err);
+          setAudioError(true);
+        });
       }
     }
-  }, [isPlaying, resolvedAudioUrl, safeIndex]);
+  }, [resolvedAudioUrl, safeIndex]);
 
   useEffect(() => {
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
-        if (resolvedAudioUrl && audioElemRef.current) {
+        if (resolvedAudioUrl && !audioError && audioElemRef.current) {
           const duration = audioElemRef.current.duration || 1;
           const cur = audioElemRef.current.currentTime || 0;
           setProgress((cur / duration) * 100);
@@ -117,20 +121,34 @@ export const AudioPlayerBar: React.FC = () => {
       }, 400);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (audioElemRef.current) {
+        audioElemRef.current.pause();
+      }
     }
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isPlaying, safeIndex, isMuted, resolvedAudioUrl, tracks.length]);
+  }, [isPlaying, safeIndex, isMuted, resolvedAudioUrl, audioError, tracks.length]);
 
   const togglePlay = () => {
-    setIsPlaying(!isPlaying);
+    const nextPlay = !isPlaying;
+    setIsPlaying(nextPlay);
+
+    if (nextPlay && resolvedAudioUrl && audioElemRef.current) {
+      audioElemRef.current.play().catch((e) => {
+        console.warn('Audio play error, fallback to synth:', e);
+        setAudioError(true);
+      });
+    } else if (!nextPlay && audioElemRef.current) {
+      audioElemRef.current.pause();
+    }
   };
 
   const handleNext = () => {
     setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
     setProgress(0);
+    setAudioError(false);
     if (audioElemRef.current) {
       audioElemRef.current.currentTime = 0;
     }
@@ -144,6 +162,10 @@ export const AudioPlayerBar: React.FC = () => {
           src={resolvedAudioUrl}
           muted={isMuted}
           onEnded={handleNext}
+          onError={() => {
+            console.warn('Audio stream error on URL:', resolvedAudioUrl);
+            setAudioError(true);
+          }}
         />
       )}
 
